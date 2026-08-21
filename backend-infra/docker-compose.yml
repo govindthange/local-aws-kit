@@ -1,0 +1,40 @@
+
+version: '3.8'
+
+services:
+  # --- Tier 1: Core API Cloud Engine ---
+  floci:
+    image: floci/floci:latest
+    container_name: floci-emulator
+    ports:
+      - "4566:4566"
+    volumes:
+      # Allows Floci to dynamically orchestrate real database engine 
+      # and EC2 container workloads using your host system socket
+      - /var/run/docker.sock:/var/run/docker.sock # Required to spawn real DBs and EC2 mocks
+    networks:
+      - env-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/health"]
+      interval: 3s
+      timeout: 2s
+      retries: 5
+
+  # --- Tier 2: Free Open Source AWS Web Console ---
+  floci-dashboard:
+    image: floci/floci-ui:latest
+    container_name: aws-local-web-console
+    ports:
+      - "8080:8080" # 👈 Opens the dashboard port to your host network
+    environment:
+      - FLOCI_ENDPOINT=http://floci-emulator:4566 # Direct container lookup
+    networks:
+      - env-net
+    depends_on:
+      floci:
+        condition: service_healthy
+
+networks:
+  env-net:
+    name: local-aws-net
+    driver: bridge
