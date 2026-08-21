@@ -23,7 +23,7 @@ services:
     image: floci/floci-ui:latest
     container_name: aws-local-web-console
     ports:
-      - "8080:8080" # 👈 Opens the dashboard port to your host network
+      - "4500:4500" # 👈 Opens the dashboard port to your host network
     environment:
       - FLOCI_ENDPOINT=http://floci-emulator:4566 # Direct container lookup
     networks:
