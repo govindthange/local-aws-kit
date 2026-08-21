@@ -15,8 +15,7 @@ docker network connect local-aws-net local-eks-worker
 docker network connect local-aws-net local-eks-worker2
 
 echo "🔹 [4/4] Deploying NGINX Ingress Routing Platform inside KinD..."
-kubectl apply -f https://githubusercontent.com
-# kubectl apply -f https://raw.githubusercontent.com
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.15.1/deploy/static/provider/cloud/deploy.yaml
 
 echo "⏳ Waiting for Ingress controller readiness parameters..."
 kubectl wait --namespace ingress-nginx \
