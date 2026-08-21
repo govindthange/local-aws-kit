@@ -4,7 +4,7 @@ networks:
 
 services:
   terraform:
-    image: hashicorp/terraform:1.6.0
+    image: hashicorp/terraform:1.6.2
     container_name: local-terraform-runner
     volumes:
       - .:/infra
