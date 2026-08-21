@@ -1,6 +1,4 @@
 
-version: '3.8'
-
 services:
   # --- Tier 1: Core API Cloud Engine ---
   floci:
