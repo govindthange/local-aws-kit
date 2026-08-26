@@ -3,7 +3,7 @@ echo "⚠️ Commencing complete environment teardown..."
 
 echo "🛑 Destroying declarative Terraform managed resources (Stack 2)..."
 cd terraform-provisioner
-docker compose run --rm terraform /bin/sh -c "terraform destroy -auto-approve" || true
+docker compose run --rm --entrypoint "/bin/sh -c" terraform "terraform destroy -auto-approve" || true
 cd ..
 
 echo "🛑 Deleting the KinD Kubernetes cluster..."
