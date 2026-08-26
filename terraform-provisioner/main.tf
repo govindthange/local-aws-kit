@@ -1,12 +1,60 @@
+# # Option 1 - failed
+# resource "aws_docdb_cluster" "local_mongo" {
+#   cluster_identifier  = "local-mongo-cluster"
+#   engine              = "docdb"
+#   master_username     = "admin"
+#   master_password     = "password123"
+#   skip_final_snapshot = true
+# 
+#   lifecycle {
+#     ignore_changes = [
+#       global_cluster_identifier,
+#     ]
+#   }
+# }
+
+# # Option 2 - failed
+# resource "aws_docdb_cluster" "local_mongo" {
+#   cluster_identifier  = "local-mongo-cluster"
+#   engine              = "docdb"
+#   master_username     = "admin"
+#   master_password     = "password123"
+#   skip_final_snapshot = true
+# }
+
+# # Option 3 - failed
+# resource "aws_docdb_instance" "local_mongo_instance" {
+#   cluster_identifier = "local-mongo-cluster"
+#   instance_class     = "db.r5.large"
+#   engine             = "docdb"
+# }
+
+# Option 4
 # Register DocumentDB cluster metadata
 resource "null_resource" "register_docdb" {
   provisioner "local-exec" {
     command = <<EOT
-      wget --quiet --post-data="Action=CreateDBCluster&DBClusterIdentifier=local-mongo-cluster&Engine=docdb&MasterUsername=admin&MasterUserPassword=password123&Version=2014-10-31" \
+      wget --quiet \
         --header="Content-Type: application/x-www-form-urlencoded" \
-        "http://floci-emulator:4566/" -O - || true
+        --post-data="Action=CreateDBCluster" \
+        "&DBClusterIdentifier=local-mongo-cluster" \
+        "&Engine=docdb" \
+        "&MasterUsername=admin" \
+        "&MasterUserPassword=password123" \
+        "&Version=2014-10-31" \
+        "http://floci-emulator:4566/" \
+        -O - || true
     EOT
   }
+}
+
+# 'engine' field value could be one of ["aurora-mysql" "aurora-postgresql" "mysql" "postgres"]
+resource "aws_rds_cluster" "local_rds_instance" {
+  cluster_identifier  = "local-rds-cluster"
+  engine              = "aurora-mysql"
+  master_username     = "admin"
+  master_password     = "password123"
+  skip_final_snapshot = true
 }
 
 # Standard Redis instance without subnet groups

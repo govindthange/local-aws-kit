@@ -20,6 +20,8 @@ provider "aws" {
   endpoints {
     s3          = "http://floci-emulator:4566"
     kms         = "http://floci-emulator:4566"
+    rds         = "http://floci-emulator:4566"
+    # rds       = "http://floci-emulator:4566/rds" # 👈 Redirect docdb to rds endpoint
     docdb       = "http://floci-emulator:4566"
     elasticache = "http://floci-emulator:4566"
     ec2         = "http://floci-emulator:4566"
