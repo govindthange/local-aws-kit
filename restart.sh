@@ -6,10 +6,14 @@ echo "🔄 Restarting local cloud and Kubernetes environment..."
 # ==============================================================================
 # STEP 1: Verify Docker Engine Readiness
 # ==============================================================================
+
+systemctl is-active --quiet docker || sudo systemctl start docker
 if ! docker info > /dev/null 2>&1; then
     echo "❌ Error: Docker daemon is not running. Please start Docker Desktop/Engine first."
     exit 1
 fi
+
+docker context use default
 
 # ==============================================================================
 # STEP 2: Resume Core Platform Backend Engine (Stack 1)
