@@ -1,0 +1,76 @@
+graph TB
+    %% --- STYLES AND CLASSES ---
+    classDef hostStyle fill:#2D3748,stroke:#A0AEC0,stroke-width:2px,color:#FFF;
+    classDef tfStyle fill:#5C4EE5,stroke:#4C38C2,stroke-width:2px,color:#FFF;
+    classDef flociStyle fill:#FF9900,stroke:#CC7A00,stroke-width:2px,color:#000;
+    classDef k3sStyle fill:#FF6B6B,stroke:#C92A2A,stroke-width:2px,color:#FFF;
+    classDef kindStyle fill:#326CE5,stroke:#1D4ED8,stroke-width:2px,color:#FFF;
+    classDef netStyle fill:#10B981,stroke:#059669,stroke-width:2px,color:#FFF;
+
+    %% --- HOST ENVIRONMENT ---
+    subgraph Host["💻 Host Operating System"]
+        Developer["👤 Developer / CLI Tools<br/>(kubectl, aws-cli, browser)"]
+        DockerDaemon["🐳 Host Docker Engine Socket<br/>(/var/run/docker.sock)"]
+    end
+
+    %% --- DOCKER NETWORK BRIDGE ---
+    subgraph DockerBridge["🌐 Shared Docker Bridge Network: local-aws-net"]
+        
+        %% TERRAFORM LAYER
+        subgraph Stack2["⚙️ Stack 2: IaC Engine"]
+            TFRunner["📦 Terraform Runner Container<br/>(hashicorp/terraform:1.6.2)"]:::tfStyle
+        end
+
+        %% FLOCI AWS EMULATOR LAYER
+        subgraph Stack1["☁️ Stack 1: AWS Emulation Core"]
+            FlociEngine["⚡ Floci Cloud Engine<br/>(:4566 Wire Protocol)"]:::flociStyle
+            FlociUI["🖥️ Floci Dashboard UI<br/>(:4500 Web Console)"]:::flociStyle
+        end
+
+        %% FLOCI DYNAMICALLY SPAWNED K3S
+        subgraph FlociEKS["⚙️ Floci Implicit EKS Engine"]
+            K3sContainer["☸️ rancher/k3s Container<br/>(Floci-spawned EKS Control Plane)"]:::k3sStyle
+        end
+
+        %% AWS MOCK SERVICES PROVISIONED BY TERRAFORM
+        subgraph ProvisionedAWS["📦 Floci Emulated AWS Services"]
+            DocDB["🍃 DocumentDB<br/>(local-mongo-cluster)"]:::flociStyle
+            ElastiCache["⚡ ElastiCache<br/>(local-cache)"]:::flociStyle
+            S3["🪣 S3 Bucket<br/>(application-assets)"]:::flociStyle
+            KMS["🔑 KMS Key"]:::flociStyle
+            EC2["🖥️ EC2 Instance"]:::flociStyle
+        end
+
+        %% EXPLICIT KIND CLUSTER MATRIX
+        subgraph KinDMatrix["☸️ Explicit KinD Cluster: local-eks"]
+            ControlPlane["🎮 local-eks-control-plane<br/>(NGINX Ingress :80/:443)"]:::kindStyle
+            Worker1["⚙️ local-eks-worker"]:::kindStyle
+            Worker2["⚙️ local-eks-worker2"]:::kindStyle
+            
+            Pods["📦 Application Pods & Workloads"]:::kindStyle
+        end
+    end
+
+    %% --- INTER-COMPONENT INTERACTIONS ---
+    
+    %% Host Interactions
+    Developer -- "1. Trigger setup.sh & kubectl apply" --> ControlPlane
+    Developer -- "2. Access Web UI (http://localhost:4500)" --> FlociUI
+    Developer -- "3. Run terraform-provisioner" --> TFRunner
+    FlociEngine -- "Mounts /var/run/docker.sock" --> DockerDaemon
+
+    %% Terraform Provisioning Flow
+    TFRunner -- "Applies provider.tf / main.tf<br/>(http://floci-emulator:4566)" --> FlociEngine
+    FlociEngine -- "4a. Provisions S3, DocDB, ElastiCache, KMS, EC2" --> ProvisionedAWS
+    FlociEngine -. "4b. Triggers EKS cluster provisioning<br/>Spawns via Docker Socket" .-> K3sContainer
+
+    %% KinD and Networking Connections
+    FlociUI -- "Fetches Local Cloud State" --> FlociEngine
+    Pods -- "Uses AWS SDK to hit emulated services" --> FlociEngine
+    
+    %% Cluster Relationship Note
+    K3sContainer -.-|Parallel EKS Emulation| ControlPlane
+
+    %% Apply Classes
+    class Host hostStyle;
+    class DockerBridge netStyle;

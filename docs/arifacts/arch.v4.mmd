@@ -1,0 +1,63 @@
+graph TD
+    %% Custom Styling Definitions
+    classDef terraformStyle fill:#5C4EE5,stroke:#333,stroke-width:2px,color:#FFF;
+    classDef flociCore fill:#FF9900,stroke:#232F3E,stroke-width:2px,color:#FFF;
+    classDef flociUI fill:#3B82F6,stroke:#1D4ED8,stroke-width:2px,color:#FFF;
+    classDef kindStyle fill:#326CE5,stroke:#1B3E8B,stroke-width:2px,color:#FFF;
+    classDef k3sStyle fill:#FFC107,stroke:#D39E00,stroke-width:2px,color:#000;
+    classDef awsService fill:#232F3E,stroke:#FF9900,stroke-width:1px,color:#FFF;
+
+    subgraph Host_Machine ["💻 Developer Host Machine"]
+        
+        %% Terraform Layer
+        subgraph Stack_2 ["⚙️ Terraform Provisioner (Stack 2)"]
+            TF["HashiCorp Terraform Runner Container"]:::terraformStyle
+        end
+
+        %% Docker Network Switch Layer
+        subgraph Virtual_Switch ["🌐 Docker Bridge Network: local-aws-net"]
+            
+            %% Backend Engine Stack 1
+            subgraph Stack_1 ["☁️ Core Cloud Platform (Stack 1)"]
+                FLOCI_UI["floci-ui Dashboard<br/>(Port 4500)"]:::flociUI
+                FLOCI["floci-emulator<br/>(AWS Wire Protocol Port 4566)"]:::flociCore
+                
+                %% Emulated AWS Services inside Floci
+                subgraph Floci_Emulated_Services ["Mocked AWS Cloud Infrastructure"]
+                    S3["Amazon S3<br/>(application-assets)"]:::awsService
+                    DOCDB["DocumentDB Cluster<br/>(local-mongo-cluster)"]:::awsService
+                    CACHE["ElastiCache Redis<br/>(local-cache)"]:::awsService
+                    KMS["AWS KMS Keys"]:::awsService
+                    EC2["EC2 Instances"]:::awsService
+                    EKS_API["Amazon EKS API Control Plane<br/>(micro-eks metadata)"]:::awsService
+                end
+            end
+
+            %% Dynamically Spawned k3s Engine
+            subgraph Floci_Implicit_K8s ["⚡ Floci Native EKS Engine (Implicit)"]
+                K3S["rancher/k3s Container<br/>(Spawned dynamically via Docker Socket)"]:::k3sStyle
+            end
+
+            %% Explicit KinD Setup
+            subgraph KinD_Matrix ["☸️ Explicit KinD Cluster Matrix (local-eks)"]
+                KIND_CP["KinD Control Plane Node<br/>(Host Ports 80 / 443)"]:::kindStyle
+                KIND_W1["KinD Worker Node 1"]:::kindStyle
+                KIND_W2["KinD Worker Node 2"]:::kindStyle
+                INGRESS["NGINX Ingress Controller"]:::kindStyle
+            end
+        end
+    end
+
+    %% Execution and Provisioning Paths
+    TF -->|1. Applies provider.tf & main.tf| FLOCI
+    FLOCI -->|2. Provisions Emulated API Metadata| S3 & DOCDB & CACHE & KMS & EC2 & EKS_API
+    FLOCI -.->|3. Spawns if native EKS container needed| K3S
+    
+    %% UI Interactivity
+    FLOCI_UI -->|Visual Dashboard Sync| FLOCI
+
+    %% KinD Routing & Cross-Network Integration
+    KIND_CP --- KIND_W1
+    KIND_CP --- KIND_W2
+    INGRESS -->|Routes Pod Traffic| KIND_W1 & KIND_W2
+    KIND_W1 & KIND_W2 ==>|Cross-Network Reachability| FLOCI
