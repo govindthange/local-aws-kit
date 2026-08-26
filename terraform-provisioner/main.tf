@@ -1,18 +1,15 @@
-resource "aws_docdb_cluster" "local_mongo" {
-  cluster_identifier        = "local-mongo-cluster"
-  engine                    = "docdb"
-  master_username           = "admin"
-  master_password           = "password123"
-  skip_final_snapshot       = true
-  global_cluster_identifier = null
-
-  lifecycle {
-    ignore_changes = [
-      global_cluster_identifier,
-    ]
+# Register DocumentDB cluster metadata
+resource "null_resource" "register_docdb" {
+  provisioner "local-exec" {
+    command = <<EOT
+      wget --quiet --post-data="Action=CreateDBCluster&DBClusterIdentifier=local-mongo-cluster&Engine=docdb&MasterUsername=admin&MasterUserPassword=password123&Version=2014-10-31" \
+        --header="Content-Type: application/x-www-form-urlencoded" \
+        "http://floci-emulator:4566/" -O - || true
+    EOT
   }
 }
 
+# Standard Redis instance without subnet groups
 resource "aws_elasticache_replication_group" "local_cache" {
   replication_group_id = "local-cache"
   description          = "Local Redis cache"

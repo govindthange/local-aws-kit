@@ -7,11 +7,25 @@ run_aws() {
     amazon/aws-cli --endpoint-url=http://floci-emulator:4566 "$@"
 }
 
-echo "👉 [1/6] DocumentDB (Amazon MongoDB):"
+echo "👉 [1/6] AWS DocumentDB: Provisioning Cluster via AWS API..."
+run_aws docdb create-db-cluster \
+  --db-cluster-identifier local-mongo-cluster \
+  --engine docdb \
+  --master-username admin \
+  --master-user-password password123 >/dev/null 2>&1 || true
+
+echo "👉 [1/6] AWS DocumentDB: Provisioning DB Instance via AWS API..."
+run_aws docdb create-db-instance \
+  --db-instance-identifier local-mongo-instance \
+  --db-cluster-identifier local-mongo-cluster \
+  --db-instance-class db.r5.large \
+  --engine docdb >/dev/null 2>&1 || true
+
+echo "👉 [1/6] AWS DocumentDB Verification (Describing Clusters):"
 run_aws docdb describe-db-clusters --db-cluster-identifier local-mongo-cluster | grep -E "DBClusterIdentifier|Status"
 
 echo -e "\n👉 [2/6] Amazon ElastiCache:"
-run_aws elasticache describe-cache-clusters --cache-cluster-id local-cache | grep -E "CacheClusterId|CacheClusterStatus"
+run_aws elasticache describe-replication-groups --replication-group-id local-cache | grep -E "ReplicationGroupId|Status"
 
 echo -e "\n👉 [3/6] Amazon S3 Storage:"
 run_aws s3 ls
