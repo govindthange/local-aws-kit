@@ -203,7 +203,7 @@ cd ..
 Run `./verify-cluster.sh` to verify the cluster setup.
 
 ```bash
-./verify-cluster.sh
+./tests/test-cluster.sh
 
 ```
 
@@ -222,11 +222,12 @@ Even better—because it is bound to port 4500 on your machine, other developers
 
 ## Step 5. Run the isolated API tests via Docker
 
-Run `./verify-tests.sh` at any time to instantly test all 6 services with zero clutter on your local machine.
+Run `./tests/test-*.sh` at any time to instantly test various AWS services with zero clutter on your local machine.
 
 ```bash
-./verify-tests.sh
-
+./tests/test-services.sh
+./tests/test-docdb.sh
+./tests/test-rds.sh
 ```
 
 ## Step 6. Run AWS CLI Verification Tests inside Host
