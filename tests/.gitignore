@@ -1,0 +1,11 @@
+# Temporary workspace output directory
+temp/
+./temp/
+
+# Build artifacts & packages
+*.zip
+*.json
+
+# Python cache files
+__pycache__/
+*.pyc

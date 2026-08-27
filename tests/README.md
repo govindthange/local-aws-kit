@@ -61,6 +61,21 @@ Run `./test-services.sh` at any time to instantly test various AWS services with
 ./tests/test-docdb.sh
 ```
 
+# AWS Serverless Function Verification
+
+Run `./test-lambda.sh` at any time to instantly test AWS Lambda on your local machine.
+
+```bash
+./tests/test-lambda.sh
+```
+
+This script build 2 functions like so:
+1. A pure arithmetic Lambda function. The **Addition Lambda** accepts `num1` and `num2` inside the `--payload` parameter and returns the evaluated sum.
+2. A Python (or Node.js) Lambda function that accepts DocumentDB/MongoDB connection parameters via event arguments (or environment variables) and fetches data from your local DocumentDB database setup. The **DocDB Fetcher Lambda** takes `host`, `port`, `username`, `password`, `database`, and `collection` parameters passed as JSON inside the invocation payload.
+
+Both executes inside the shared `local-aws-net` Docker network so the Lambda container can seamlessly talk to `local-mongo-cluster:27017`.
+
+
 # AWS CLI Verification inside Host
 
 To verify each of the 6 simulated services, run these test commands from your host machine terminal.
