@@ -198,16 +198,7 @@ sudo rm -rf .terraform .terraform.lock.hcl terraform.tfstate terraform.tfstate.b
 cd ..
 ```
 
-## Step 3. Verify the cluster
-
-Run `./verify-cluster.sh` to verify the cluster setup.
-
-```bash
-./tests/test-cluster.sh
-
-```
-
-## Step 4. Open the Web UI Management Console:
+## Step 3. Open the Web UI Management Console:
 
 Once you execute `./setup.sh` and deploy your infrastructure via Terraform, you can open floci dashboard like so:
 
@@ -220,81 +211,18 @@ Even better—because it is bound to port 4500 on your machine, other developers
 - [1] [https://github.com](https://github.com/floci-io/floci-ui)
 - [2] [https://github.com](https://github.com/floci-io/floci/issues/1517)
 
-## Step 5. Run the isolated API tests via Docker
+## Step 4. Run the isolated AWS service verification tests
 
-Run `./tests/test-*.sh` at any time to instantly test various AWS services with zero clutter on your local machine.
+Follow AWS service verification steps here [...](./tests/README.md)
 
-```bash
-./tests/test-services.sh
-./tests/test-docdb.sh
-./tests/test-rds.sh
-```
-
-## Step 6. Run AWS CLI Verification Tests inside Host
-
-To verify each of the 6 simulated services, run these test commands from your host machine terminal.
-
-#### 🔧 Prep your host environment parameters:
+## Step 5. Stop all containers/services when done.
 
 ```bash
-export AWS_ACCESS_KEY_ID=mock-key
-export AWS_SECRET_ACCESS_KEY=mock-secret
-export AWS_DEFAULT_REGION=us-east-1
-export AWS_ENDPOINT_URL=http://localhost:4566
-```
-
-#### Test 1: Amazon MongoDB (DocumentDB)
-Verify that the cluster control plane exists and matches the architecture defined in Terraform:
-
-```bash
-aws docdb describe-db-clusters --db-cluster-identifier local-mongo-cluster
-```
-
-#### Test 2: Amazon ElastiCache
-Confirm that Floci has successfully provisioned a real underlying Redis engine tracking layer:
-
-```bash
-aws elasticache describe-cache-clusters --cache-cluster-id local-cache
-```
-
-#### Test 3: Amazon S3
-Create a temporary dummy file and upload it directly into your local S3 object container:
-
-```bash
-echo "Testing local object store" > sample.txt
-aws s3 cp sample.txt s3://application-assets/
-aws s3 ls s3://application-assets/
-```
-
-#### Test 4: KMS Keys
-List the encryption elements to confirm your cryptographic control plane keys are active:
-
-```bash
-aws kms list-keys
-```
-
-#### Test 5: Amazon EKS
-Query the cluster metadata parameters to confirm EKS control plane mapping validation:
-
-```bash
-aws eks describe-cluster --name micro-eks
-```
-
-#### Test 6: Amazon EC2
-Inspect your EC2 instances to verify that the proxy virtual machine container is online and tagged properly:
-
-```bash
-aws ec2 describe-instances --filters "Name=tag:Name,Values=LocalComputeNode"
-```
-
-## Step 7. Reset the workspace whenever necessary:
-
-```bash
-./teardown.sh
+sudo ./stop.sh
 
 ```
 
-## Step 8. Resume environment after host reboot or shutdown:
+## Step 6. Resume environment when ready or after host reboot or shutdown
 
 When your machine shuts down, Docker containers and KinD nodes go offline. You **do not** need to re-run `setup-prerequisites.sh`[cite: 1]. 
 
@@ -306,4 +234,11 @@ chmod +x restart.sh
 
 # Resume your complete local cloud setup
 bash ./restart.sh
+```
+
+## Step 7. Reset the workspace whenever necessary:
+
+```bash
+./teardown.sh
+
 ```
