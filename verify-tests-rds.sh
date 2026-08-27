@@ -18,7 +18,9 @@ echo "👉 [2/3] AWS RDS Verification (Describing Clusters):"
 run_aws rds describe-db-clusters --db-cluster-identifier local-rds-cluster | grep -E "DBClusterIdentifier|Status|Engine"
 
 echo "👉 [3/3] Database Execution: Creating Schema, Table, and Querying Data..."
-# Execute SQL commands against the local-mysql-engine container on local-aws-net network
+
+# First, launch an ephemeral MySQL client CLI to connect to the database server already running inside backend-infra/docker-compose setup.
+# and then execute SQL commands against the local-mysql-engine container on local-aws-net network
 docker run --rm --network local-aws-net \
   -e MYSQL_PWD=password123 \
   mysql:8.0 mysql -h local-mysql-engine -u root -e "
