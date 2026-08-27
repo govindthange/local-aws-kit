@@ -50,7 +50,18 @@ services:
       timeout: 2s
       retries: 10
 
-  # --- Tier 4: AWS DocumentDB Engine (MongoDB Protocol Compatible) ---
+  # --- Tier 4: MySQL Visual Database Explorer ---
+  db-web-client:
+    image: adminer:latest
+    container_name: aws-rds-web-client
+    ports:
+      - "8082:8080"
+    networks:
+      - env-net
+    depends_on:
+      - local-mysql
+
+  # --- Tier 5: AWS DocumentDB Engine (MongoDB Protocol Compatible) ---
   local-mongo:
     image: mongo:6.0
     container_name: local-mongo-cluster
@@ -62,7 +73,7 @@ services:
     networks:
       - env-net
 
-  # --- Tier 5: DocumentDB Visual Web Client & Explorer ---
+  # --- Tier 6: DocumentDB Visual Web Client & Explorer ---
   docdb-web-client:
     image: mongo-express:latest
     container_name: aws-docdb-web-client
