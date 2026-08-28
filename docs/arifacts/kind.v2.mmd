@@ -1,0 +1,93 @@
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryColor': '#eaf6f8',
+    'primaryTextColor': '#000000',
+    'primaryBorderColor': '#a3d5dc',
+    'lineColor': '#6fb8c9',
+    'edgeLabelBackground': 'transparent',
+    'fontFamily': 'arial',
+    'mainBkg': '#eaf6f8',
+    'secondBkg': '#d6ecf3',
+    'tertiaryColor': '#f0f9fb',
+    'clusterBkg': '#f5fbfc',
+    'clusterBorder': '#a3d5dc',
+    'background': '#ffffff',
+    'secondaryColor': '#d6ecf3',
+    'tertiaryTextColor': '#000000',
+    'secondaryTextColor': '#000000',
+    'textColor': '#000000',
+    'nodeTextColor': '#000000'
+  },
+  'themeCSS': '.edgeLabel, .edgeLabels, .edgeLabel *, .edgeLabels *, .edgeLabel .label, .edgeLabels .label, .edgeLabel p, .edgeLabels p, .edgeLabel div, .edgeLabels div, .edgeLabel foreignObject, .edgeLabels foreignObject, .edgeLabel rect, .edgeLabels rect, .edgeLabel span, .edgeLabels span, .label rect, tspan { background-color: transparent !important; background: transparent !important; fill: transparent !important; stroke: none !important; } .edgeLabel .label text, .edgeLabel text, .edgeLabels text, .edgeLabel p, .edgeLabels p, .edgeLabel span, .edgeLabels span { color: #4d4d4d !important; fill: #4d4d4d !important; }'
+}}%%
+
+graph TB
+    %% Styling and Definitions
+    classDef controlPlane fill:#cdeee7,stroke:#7fcdbb,stroke-width:2px,color:#000000;
+    classDef workerNode fill:#dff3ef,stroke:#a8ddd0,stroke-width:2px,color:#000000;
+    classDef pod fill:#FFFCD1,stroke:#d6bbf15,stroke-width:2px,color:#000000;
+    classDef external fill:#A3E2F0,stroke:#a3d5dc,stroke-width:2px,color:#000000;
+
+    %% External Actors
+    subgraph External_Users ["External Interaction"]
+        Admin[/"Admin / kubectl"\]:::external
+        Traffic[/"App Web Traffic"\]:::external
+    end
+
+    %% Control Plane Node
+    subgraph Control_Plane ["Control Plane (Master Node)"]
+        APIServer["kube-apiserver<br/>(Core Hub)"]:::controlPlane
+        Etcd[("etcd<br/>(State Store)")]:::controlPlane
+        Scheduler["kube-scheduler<br/>(Pod Placement)"]:::controlPlane
+        KCM["kube-controller-manager<br/>(State Loops)"]:::controlPlane
+        CCM["cloud-controller-manager<br/>(Cloud APIs)"]:::controlPlane
+        
+        %% Internal Control Plane Links
+        APIServer <--> Etcd
+        APIServer <-->|Watches/Binds| Scheduler
+        APIServer <-->|Controls| KCM
+        APIServer <-->|Syncs| CCM
+    end
+
+    %% Worker Node 1
+    subgraph Worker_Node_1 ["Worker Node 1"]
+        Kubelet1["kubelet<br/>(Node Agent)"]:::workerNode
+        KProxy1["kube-proxy<br/>(Network Agent)"]:::workerNode
+        CRI1["Container Runtime<br/>(containerd / CRI-O)"]:::workerNode
+        
+        subgraph Pod1 ["Pod"]
+            Container1["App Container"]:::pod
+        end
+
+        %% Node interactions
+        Kubelet1 -- CRI --> CRI1
+        CRI1 -- Deploys --> Container1
+        KProxy1 -- Directs Traffic --> Pod1
+    end
+
+    %% Worker Node 2
+    subgraph Worker_Node_2 ["Worker Node 2"]
+        Kubelet2["kubelet"]:::workerNode
+        KProxy2["kube-proxy"]:::workerNode
+        CRI2["Container Runtime"]:::workerNode
+        
+        subgraph Pod2 ["Pod"]
+            Container2["App Container"]:::pod
+        end
+
+        Kubelet2 -- CRI --> CRI2
+        CRI2 -- Deploys --> Container2
+        KProxy2 -- Directs Traffic --> Pod2
+    end
+
+    %% External Connections
+    Admin -->|REST API Calls| APIServer
+    Traffic -->|Load Balancer / Service| KProxy1
+    Traffic -->|Load Balancer / Service| KProxy2
+
+    %% Cross Cluster Control Connections
+    APIServer <-->|Syncs State| Kubelet1
+    APIServer <-->|Syncs State| Kubelet2
+    APIServer <-->|Network Policies| KProxy1
+    APIServer <-->|Network Policies| KProxy2

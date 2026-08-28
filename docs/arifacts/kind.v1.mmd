@@ -1,0 +1,78 @@
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryColor': '#eaf6f8',
+    'primaryTextColor': '#000000',
+    'primaryBorderColor': '#a3d5dc',
+    'lineColor': '#6fb8c9',
+    'edgeLabelBackground': 'transparent',
+    'fontFamily': 'arial',
+    'mainBkg': '#eaf6f8',
+    'secondBkg': '#d6ecf3',
+    'tertiaryColor': '#f0f9fb',
+    'clusterBkg': '#f5fbfc',
+    'clusterBorder': '#a3d5dc',
+    'background': '#ffffff',
+    'secondaryColor': '#d6ecf3',
+    'tertiaryTextColor': '#000000',
+    'secondaryTextColor': '#000000',
+    'textColor': '#000000',
+    'nodeTextColor': '#000000'
+  },
+  'themeCSS': '.edgeLabel, .edgeLabels, .edgeLabel *, .edgeLabels *, .edgeLabel .label, .edgeLabels .label, .edgeLabel p, .edgeLabels p, .edgeLabel div, .edgeLabels div, .edgeLabel foreignObject, .edgeLabels foreignObject, .edgeLabel rect, .edgeLabels rect, .edgeLabel span, .edgeLabels span, .label rect, tspan { background-color: transparent !important; background: transparent !important; fill: transparent !important; stroke: none !important; } .edgeLabel .label text, .edgeLabel text, .edgeLabels text, .edgeLabel p, .edgeLabels p, .edgeLabel span, .edgeLabels span { color: #4d4d4d !important; fill: #4d4d4d !important; }'
+}}%%
+
+graph TB
+    %% Structural Grouping for Cloud/Cluster Boundaries
+    subgraph Cluster [Kubernetes Cluster]
+        
+        %% Control Plane Subgraph
+        subgraph CP [Control Plane / Master Node]
+            API[kube-apiserver]
+            ETCD[(etcd cluster)]
+            SCHED[kube-scheduler]
+            CM[kube-controller-manager]
+            
+            API <--> ETCD
+            SCHED --> API
+            CM --> API
+        end
+
+        %% Application Namespace Subgraph
+        subgraph NS [Namespace: Production]
+            ING[Ingress Controller]
+            SVC[Service: App-ClusterIP]
+            
+            subgraph Pods [ReplicaSet: 3x Pods]
+                P1[Pod: Web App]
+                P2[Pod: Web App]
+                P3[Pod: Web App]
+            end
+            
+            KUBELET[kubelet]
+            PROXY[kube-proxy]
+        end
+    end
+
+    %% External Infrastructure
+    Client((Internet User))
+    DNS[Route 53 / DNS]
+
+    %% Traffic Flow Routing & Interactions
+    Client -->|HTTPS| DNS
+    DNS -->|Route Traffic| ING
+    ING -->|Load Balance| SVC
+    SVC --> P1
+    SVC --> P2
+    SVC --> P3
+    
+    %% Node Agent Connections to Control Plane
+    KUBELET <-->|Watch/Report| API
+    PROXY <-->|IP Tables Sync| API
+
+    %% Styling and Visual Anchors
+    style Cluster fill:#f5f7fa,stroke:#007acc,stroke-width:2px;
+    style CP fill:#e1f5fe,stroke:#0288d1,stroke-width:1.5px;
+    style NS fill:#efebe9,stroke:#5d4037,stroke-width:1.5px;
+    style API fill:#ffe082,stroke:#ffb300,stroke-width:2px;
+    style ETCD fill:#b2dfdb,stroke:#004d40,stroke-width:2px;
