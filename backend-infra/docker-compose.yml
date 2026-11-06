@@ -11,11 +11,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock # Required to spawn real DBs and EC2 mocks
     networks:
       - env-net
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4566/health"]
-      interval: 3s
-      timeout: 2s
-      retries: 5
 
   # --- Tier 2: Free Open Source AWS Web Console ---
   floci-dashboard:
