@@ -29,7 +29,7 @@ echo "🔹 [2/5] Constructing High-Fidelity KinD Cluster Matrix..."
 if kind get clusters | grep -q "^local-eks$"; then
     echo "⚠️ KinD cluster 'local-eks' already exists. Skipping creation."
 else
-    kind create cluster --name local-eks --config local-kubernetes/kind-config.yaml
+    kind create cluster --name local-eks --config ./local-kubernetes/kind-config.yaml
 fi
 
 # ==============================================================================
