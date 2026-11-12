@@ -5,6 +5,7 @@ services:
     container_name: floci-emulator
     ports:
       - "4566:4566"
+      - "6379:6379" # 👈 exposes the redis port to your host network
     volumes:
       # Allows Floci to dynamically orchestrate real database engine 
       # and EC2 container workloads using your host system socket
